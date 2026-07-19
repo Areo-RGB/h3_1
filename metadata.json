@@ -1,6 +1,8 @@
 {
-  "name": "",
-  "description": "",
+  "name": "H03 Team Manager",
+  "description": "Official team management, calendar schedules, official rosters, and attendance tracking for Berlin Hertha 03.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

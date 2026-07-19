@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { User, Calendar as CalendarIcon, ClipboardList, Table } from 'lucide-react';
+import { User, Calendar as CalendarIcon, Shield } from 'lucide-react';
 import { Tab } from '../types';
 
 interface BottomNavProps {
@@ -8,16 +8,15 @@ interface BottomNavProps {
 }
 
 const navItems = [
-  { id: 'calendar', icon: CalendarIcon, label: 'Kalender' },
-  { id: 'anwesenheit', icon: ClipboardList, label: 'Anwesenheit' },
-  { id: 'tabelle', icon: Table, label: 'Tabelle' },
+  { id: 'activities', icon: CalendarIcon, label: 'Aktivitäten' },
+  { id: 'team', icon: Shield, label: 'Team & Liga' },
   { id: 'profile', icon: User, label: 'Profil' },
 ] as const;
 
 export const BottomNav = memo(function BottomNav({ currentTab, setCurrentTab }: BottomNavProps) {
   return (
-    <div className="sticky bottom-0 bg-white border-t border-slate-200 flex justify-around pb-safe z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] shrink-0 h-[64px]">
-      <div className="w-full max-w-md mx-auto flex h-full">
+    <div id="bottom-nav-container" className="sticky bottom-0 bg-white border-t border-slate-200 flex justify-around pb-safe z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] shrink-0 h-[64px]">
+      <div id="bottom-nav-wrapper" className="w-full max-w-md mx-auto flex h-full">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentTab === item.id;

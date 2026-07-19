@@ -11,20 +11,14 @@ import { useIsMobile } from './hooks/use-mobile';
 import { InstallPrompt } from './components/InstallPrompt';
 
 // Lazy load views for bundle size optimization
-const TeamView = lazy(() =>
-  import('./features/team/TeamView').then((m) => ({ default: m.TeamView })),
+const ActivitiesGroup = lazy(() =>
+  import('./features/activities/ActivitiesGroup').then((m) => ({ default: m.ActivitiesGroup })),
+);
+const TeamGroup = lazy(() =>
+  import('./features/team/TeamGroup').then((m) => ({ default: m.TeamGroup })),
 );
 const ProfileView = lazy(() =>
   import('./features/auth/ProfileView').then((m) => ({ default: m.ProfileView })),
-);
-const CalendarView = lazy(() =>
-  import('./features/calendar/CalendarView').then((m) => ({ default: m.CalendarView })),
-);
-const AnwesenheitView = lazy(() =>
-  import('./features/polls/AnwesenheitView').then((m) => ({ default: m.AnwesenheitView })),
-);
-const TabelleView = lazy(() =>
-  import('./features/tabelle/TabelleView').then((m) => ({ default: m.TabelleView })),
 );
 
 const CreateTraining = lazy(() =>
@@ -58,7 +52,7 @@ const ViewLoader = () => (
 );
 
 export default function App() {
-  const [currentTab, setCurrentTab] = useState<Tab>('calendar');
+  const [currentTab, setCurrentTab] = useState<Tab>('activities');
   const [activeSubView, setActiveSubView] = useState<
     'none' | 'create-training' | 'create-spiel' | 'create-turnier' | 'create-event'
   >('none');
@@ -80,7 +74,7 @@ export default function App() {
   const handleLogout = useCallback(() => {
     setCurrentUser(null);
     localStorage.removeItem('h03_current_user');
-    setCurrentTab('calendar');
+    setCurrentTab('activities');
     setActiveSubView('none');
   }, []);
 
@@ -115,15 +109,13 @@ export default function App() {
           <Suspense fallback={<ViewLoader />}>
             {activeSubView === 'none' ? (
               <>
-                {currentTab === 'team' && <TeamView />}
-                {currentTab === 'calendar' && (
-                  <CalendarView
+                {currentTab === 'activities' && (
+                  <ActivitiesGroup
                     currentUser={currentUser}
                     onNavigateToCreate={(view) => setActiveSubView(view)}
                   />
                 )}
-                {currentTab === 'anwesenheit' && <AnwesenheitView currentUser={currentUser} />}
-                {currentTab === 'tabelle' && <TabelleView />}
+                {currentTab === 'team' && <TeamGroup />}
                 {currentTab === 'profile' && (
                   <ProfileView currentUser={currentUser} onLogout={handleLogout} />
                 )}
@@ -135,7 +127,7 @@ export default function App() {
                     onBack={() => setActiveSubView('none')}
                     onSuccess={() => {
                       setActiveSubView('none');
-                      setCurrentTab('calendar');
+                      setCurrentTab('activities');
                     }}
                   />
                 )}
@@ -144,7 +136,7 @@ export default function App() {
                     onBack={() => setActiveSubView('none')}
                     onSuccess={() => {
                       setActiveSubView('none');
-                      setCurrentTab('calendar');
+                      setCurrentTab('activities');
                     }}
                   />
                 )}
@@ -153,7 +145,7 @@ export default function App() {
                     onBack={() => setActiveSubView('none')}
                     onSuccess={() => {
                       setActiveSubView('none');
-                      setCurrentTab('calendar');
+                      setCurrentTab('activities');
                     }}
                   />
                 )}
@@ -162,7 +154,7 @@ export default function App() {
                     onBack={() => setActiveSubView('none')}
                     onSuccess={() => {
                       setActiveSubView('none');
-                      setCurrentTab('calendar');
+                      setCurrentTab('activities');
                     }}
                   />
                 )}

@@ -122,10 +122,11 @@ export const ProfileView = React.memo(({ currentUser, onLogout }: ProfileViewPro
         </p>
       </div>
 
-      <div className="px-4 flex flex-col gap-4">
+      <div id="profile-sections-list" className="px-4 flex flex-col gap-4">
         {currentUser.type === 'admin' && (
-          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+          <div id="admin-section-container" className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
             <button
+              id="admin-collapsible-btn"
               onClick={() => setExpandedSection(expandedSection === 'admin' ? null : 'admin')}
               className="flex items-center justify-between p-5 w-full"
             >
@@ -142,11 +143,12 @@ export const ProfileView = React.memo(({ currentUser, onLogout }: ProfileViewPro
               )}
             </button>
             {expandedSection === 'admin' && (
-              <div className="px-5 pb-5 flex flex-col gap-4 animate-in fade-in slide-in-from-top-2">
+              <div id="admin-collapsible-content" className="px-5 pb-5 flex flex-col gap-4 animate-in fade-in slide-in-from-top-2">
                 <p className="text-sm text-slate-500">
                   Datenbank mit Beispieldaten initialisieren.
                 </p>
                 <Button
+                  id="seed-database-btn"
                   onClick={handleSeed}
                   disabled={isSeeding}
                   className="bg-amber-600 text-white hover:bg-amber-700 w-full font-bold"
@@ -154,7 +156,7 @@ export const ProfileView = React.memo(({ currentUser, onLogout }: ProfileViewPro
                   {isSeeding ? 'Wird geladen...' : 'Beispieldaten laden'}
                 </Button>
                 {seedMessage && (
-                  <p className="text-sm font-bold text-center text-green-600">{seedMessage}</p>
+                  <p id="seed-message-feedback" className="text-sm font-bold text-center text-green-600">{seedMessage}</p>
                 )}
 
                 <div className="border-t border-slate-100 pt-4 flex flex-col gap-3">
@@ -162,7 +164,7 @@ export const ProfileView = React.memo(({ currentUser, onLogout }: ProfileViewPro
                     <UserPlus size={18} className="text-[#00479e]" />
                     <h3 className="font-bold text-slate-900">Spieler verwalten</h3>
                   </div>
-                  <form onSubmit={handleCreateUser} className="flex flex-col gap-2">
+                  <form id="create-player-form" onSubmit={handleCreateUser} className="flex flex-col gap-2">
                     <label htmlFor="new-user-name" className="sr-only">Name des neuen Spielers</label>
                     <Input
                       id="new-user-name"
@@ -172,6 +174,7 @@ export const ProfileView = React.memo(({ currentUser, onLogout }: ProfileViewPro
                       required
                     />
                     <Button
+                      id="create-player-btn"
                       type="submit"
                       className="bg-[#00479e] text-white font-bold"
                     >
@@ -179,7 +182,7 @@ export const ProfileView = React.memo(({ currentUser, onLogout }: ProfileViewPro
                     </Button>
                   </form>
                   {userMessage && (
-                    <p className="text-sm font-bold text-center text-green-600">{userMessage}</p>
+                    <p id="user-message-feedback" className="text-sm font-bold text-center text-green-600">{userMessage}</p>
                   )}
                 </div>
 
@@ -290,12 +293,13 @@ export const ProfileView = React.memo(({ currentUser, onLogout }: ProfileViewPro
         )}
 
         <button
+          id="profile-logout-btn"
           onClick={onLogout}
           className="flex items-center justify-center p-5 bg-white rounded-2xl border border-red-200 shadow-sm hover:bg-red-50 hover:border-red-300 transition-all active:scale-[0.98] group mt-8 w-full"
         >
-          <div className="flex items-center gap-3 text-red-600">
+          <div id="profile-logout-content" className="flex items-center gap-3 text-red-600">
             <LogOut size={20} strokeWidth={2.5} />
-            <span className="font-bold text-[17px] tracking-tight uppercase">Abmelden</span>
+            <span id="profile-logout-text" className="font-bold text-[17px] tracking-tight uppercase">Abmelden</span>
           </div>
         </button>
       </div>

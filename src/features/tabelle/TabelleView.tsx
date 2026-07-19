@@ -12,7 +12,7 @@ export const TabelleView = memo(function TabelleView() {
         </div>
       </div>
       <div className="flex-1 w-full p-2 bg-white overflow-y-auto scrollbar-hide">
-        <FussballdeWidget id="9f997bf6-4621-497b-868c-8036198457ab" type="competition" />
+        <FussballdeWidget id="5db8a662-d4a5-4194-8db4-f766a46551ad" type="table" />
       </div>
     </div>
   );
