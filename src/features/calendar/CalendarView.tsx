@@ -35,8 +35,8 @@ export const CalendarView = memo(function CalendarView({ currentUser, onNavigate
       )}
       <div className="flex-1 w-full p-2 bg-white">
         <iframe 
-          src="https://calendar.google.com/calendar/embed?wkst=2&ctz=Europe%2FBerlin&showTabs=0&showCalendars=0&showTz=0&mode=MONTH&showPrint=0&src=MDlkM2E0OTEyYzFmMDE4OTM1NmUyZWZmZmFmZDhlZWRhZmJhYmVkYjc5YjNhNmE0MDgwZWQ0N2RhZGNiNjYyNkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t&color=%237986cb" 
-          style={{ border: 'solid 1px #777' }}
+          src="https://calendar.google.com/calendar/embed?height=600&wkst=2&ctz=Europe%2FBerlin&showPrint=0&showTz=0&showCalendars=0&showTabs=0&showDate=0&showNav=0&showTitle=0&src=MDlkM2E0OTEyYzFmMDE4OTM1NmUyZWZmZmFmZDhlZWRhZmJhYmVkYjc5YjNhNmE0MDgwZWQ0N2RhZGNiNjYyNkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t&color=%237986cb" 
+          style={{ border: 0 }}
           className="w-full h-full rounded-md"
           frameBorder="0" 
           scrolling="no"
