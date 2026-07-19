@@ -5,10 +5,11 @@ import { Member } from '../../types';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
+import FussballSquad from '../../components/FussballSquad';
 
 export const TeamView = memo(() => {
   const [members, setMembers] = useState<Member[]>([]);
-
+  
   useEffect(() => {
     return watchMembers((data) => {
       setMembers(Object.keys(data).map((key) => ({ ...data[key], id: key })));
@@ -28,11 +29,17 @@ export const TeamView = memo(() => {
         </Button>
       </div>
 
+      <div className="mb-8 px-4">
+        <h3 className="text-xl font-bold text-slate-900 mb-4">Offizieller Kader (FUSSBALL.de)</h3>
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden min-h-[600px] w-full max-w-full">
+          <FussballSquad />
+        </div>
+      </div>
+
       <div className="mb-8">
         <div className="px-4 mb-4">
-          <h3 className="text-xl font-bold text-slate-900">Mitglieder ({members.length})</h3>
+          <h3 className="text-xl font-bold text-slate-900">App-Mitglieder ({members.length})</h3>
         </div>
-
         <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide px-4">
           {members.length === 0 ? (
             <div className="text-sm text-slate-500 italic">Keine Mitglieder gefunden.</div>

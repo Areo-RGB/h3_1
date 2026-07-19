@@ -1,15 +1,13 @@
 import {
-  UserCog,
   ChevronRight,
   ChevronDown,
   LogOut,
-  Check,
   Database,
   BarChart3,
   UserPlus,
 } from 'lucide-react';
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { watchEvents, updateMember } from '../../lib/dataRepository';
+import { watchEvents } from '../../lib/dataRepository';
 import { Member, Termin, TerminStatus } from '../../types';
 import { Avatar, AvatarImage, AvatarFallback } from '../../components/ui/avatar';
 import { Input } from '../../components/ui/input';
@@ -24,12 +22,6 @@ interface ProfileViewProps {
 
 export const ProfileView = React.memo(({ currentUser, onLogout }: ProfileViewProps) => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
-  const [firstName, setFirstName] = useState(currentUser.firstName || '');
-  const [lastName, setLastName] = useState(currentUser.lastName || '');
-  const [birthDate, setBirthDate] = useState(currentUser.birthDate || '');
-  const [contact, setContact] = useState(currentUser.contact || '');
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState('');
   const [isSeeding, setIsSeeding] = useState(false);
   const [seedMessage, setSeedMessage] = useState('');
   const [members] = useState<Member[]>([]);
@@ -87,25 +79,6 @@ export const ProfileView = React.memo(({ currentUser, onLogout }: ProfileViewPro
     return { ...counts, participationPercentage, events };
   }, [selectedMember, termine]);
 
-  const handleSave = useCallback(async () => {
-    setIsSaving(true);
-    try {
-      await updateMember(currentUser.id, {
-        firstName,
-        lastName,
-        birthDate,
-        contact,
-      });
-      setSaveMessage('Erfolgreich gespeichert!');
-      setTimeout(() => setSaveMessage(''), 3000);
-    } catch (e) {
-      console.error(e);
-      setSaveMessage('Fehler beim Speichern');
-    } finally {
-      setIsSaving(false);
-    }
-  }, [currentUser.id, firstName, lastName, birthDate, contact]);
-
   const handleSeed = useCallback(async () => {
     if (!confirm('Datenbank initialisieren?')) return;
     setIsSeeding(true);
@@ -150,58 +123,6 @@ export const ProfileView = React.memo(({ currentUser, onLogout }: ProfileViewPro
       </div>
 
       <div className="px-4 flex flex-col gap-4">
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-          <div className="flex items-center gap-4 p-5 border-b border-slate-100">
-            <div className="p-2 bg-slate-100 rounded-xl text-slate-900">
-              <UserCog size={22} />
-            </div>
-            <span className="font-bold text-[17px] text-slate-900">Persönliche Daten</span>
-          </div>
-          <div className="px-5 py-5 flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="firstname" className="text-xs font-bold text-slate-500 uppercase mb-1 block">
-                    Vorname
-                  </label>
-                  <Input id="firstname" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-                </div>
-                <div>
-                  <label htmlFor="lastname" className="text-xs font-bold text-slate-500 uppercase mb-1 block">
-                    Nachname
-                  </label>
-                  <Input id="lastname" value={lastName} onChange={(e) => setLastName(e.target.value)} />
-                </div>
-              </div>
-              <div>
-                <label htmlFor="birthdate" className="text-xs font-bold text-slate-500 uppercase mb-1 block">
-                  Geburtsdatum
-                </label>
-                <Input
-                  id="birthdate"
-                  type="date"
-                  value={birthDate}
-                  onChange={(e) => setBirthDate(e.target.value)}
-                />
-              </div>
-              <div>
-                <label htmlFor="contact-info" className="text-xs font-bold text-slate-500 uppercase mb-1 block">
-                  Kontakt (Tel. / Email)
-                </label>
-                <Input id="contact-info" value={contact} onChange={(e) => setContact(e.target.value)} />
-              </div>
-              <div className="pt-2 flex items-center justify-between">
-                <span className="text-sm font-bold text-green-600">{saveMessage}</span>
-                <Button
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  className="bg-slate-900 text-white font-bold px-6"
-                >
-                  Speichern {isSaving ? '...' : <Check size={18} className="ml-2" />}
-                </Button>
-              </div>
-            </div>
-        </div>
-
         {currentUser.type === 'admin' && (
           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
             <button
