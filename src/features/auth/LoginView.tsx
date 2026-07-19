@@ -1,0 +1,71 @@
+import React, { useState, useEffect } from 'react';
+import { Member } from '../../types';
+import { Avatar, AvatarImage, AvatarFallback } from '../../components/ui/avatar';
+import { LogIn, Loader2 } from 'lucide-react';
+import { watchMembers } from '../../lib/dataRepository';
+
+interface LoginViewProps {
+  onLogin: (user: Member) => void;
+}
+
+export const LoginView = React.memo(({ onLogin }: LoginViewProps) => {
+  const [loading, setLoading] = useState(true);
+  const [members, setMembers] = useState<Member[]>([]);
+
+  useEffect(() => {
+    const unsubscribe = watchMembers((data) => {
+      const membersList = Object.values(data);
+      setMembers(membersList.sort((a, b) => a.name.localeCompare(b.name)));
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full bg-[#f8fafc]">
+        <Loader2 className="size-10 text-[#00479e] animate-spin mb-4" />
+        <span className="text-sm font-bold uppercase tracking-widest text-slate-400">
+          Wird geladen...
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-full bg-[#f8fafc] overflow-y-auto px-4 py-8">
+      <div className="flex flex-col items-center mb-8">
+        <div className="size-16 bg-[#00479e] rounded-2xl flex items-center justify-center shadow-lg mb-4">
+          <LogIn size={32} className="text-white" />
+        </div>
+        <h2 className="text-3xl font-black uppercase tracking-tighter text-slate-900">Anmeldung</h2>
+      </div>
+
+      <div className="max-w-md mx-auto w-full">
+        <div className="flex flex-col gap-6">
+          <h3 className="text-xl font-bold text-slate-900 text-center">Wähle deinen Namen</h3>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {members.map((user) => (
+              <button
+                key={user.id}
+                onClick={() => onLogin(user)}
+                className="flex flex-col items-center gap-3 p-4 bg-white border border-slate-200 rounded-2xl hover:border-[#00479e] hover:shadow-md transition-all active:scale-95"
+              >
+                <Avatar className="size-12 border-2 border-slate-50">
+                  <AvatarImage src={user.avatarUrl || '/logo.webp'} className="object-cover" />
+                  <AvatarFallback>{user.name[0]}</AvatarFallback>
+                </Avatar>
+                <span className="font-bold text-sm text-slate-900 truncate w-full px-1">
+                  {user.name}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+LoginView.displayName = 'LoginView';

@@ -1,0 +1,12 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+USER_PINS.local.md
+.agents/
+.serena/
+skills-lock.json
