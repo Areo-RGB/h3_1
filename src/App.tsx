@@ -23,6 +23,9 @@ const CalendarView = lazy(() =>
 const AnwesenheitView = lazy(() =>
   import('./features/polls/AnwesenheitView').then((m) => ({ default: m.AnwesenheitView })),
 );
+const TabelleView = lazy(() =>
+  import('./features/tabelle/TabelleView').then((m) => ({ default: m.TabelleView })),
+);
 
 const CreateTraining = lazy(() =>
   import('./features/events/CreateTraining').then((m) => ({ default: m.CreateTraining })),
@@ -120,6 +123,7 @@ export default function App() {
                   />
                 )}
                 {currentTab === 'anwesenheit' && <AnwesenheitView currentUser={currentUser} />}
+                {currentTab === 'tabelle' && <TabelleView />}
                 {currentTab === 'profile' && (
                   <ProfileView currentUser={currentUser} onLogout={handleLogout} />
                 )}

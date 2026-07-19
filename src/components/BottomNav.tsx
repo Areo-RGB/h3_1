@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { User, Calendar as CalendarIcon, ClipboardList } from 'lucide-react';
+import { User, Calendar as CalendarIcon, ClipboardList, Table } from 'lucide-react';
 import { Tab } from '../types';
 
 interface BottomNavProps {
@@ -10,6 +10,7 @@ interface BottomNavProps {
 const navItems = [
   { id: 'calendar', icon: CalendarIcon, label: 'Kalender' },
   { id: 'anwesenheit', icon: ClipboardList, label: 'Anwesenheit' },
+  { id: 'tabelle', icon: Table, label: 'Tabelle' },
   { id: 'profile', icon: User, label: 'Profil' },
 ] as const;
 

@@ -1,4 +1,4 @@
-export type Tab = 'team' | 'profile' | 'admin' | 'calendar' | 'anwesenheit';
+export type Tab = 'team' | 'profile' | 'admin' | 'calendar' | 'anwesenheit' | 'tabelle';
 export type TerminStatus = 'accepted' | 'declined' | null;
 export type UserType = 'admin' | 'user';
 
