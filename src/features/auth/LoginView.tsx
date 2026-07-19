@@ -1,37 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Member } from '../../types';
 import { Avatar, AvatarImage, AvatarFallback } from '../../components/ui/avatar';
-import { LogIn, Loader2 } from 'lucide-react';
-import { watchMembers } from '../../lib/dataRepository';
+import { LogIn } from 'lucide-react';
+import { USERS } from '../../lib/users';
 
 interface LoginViewProps {
   onLogin: (user: Member) => void;
 }
 
 export const LoginView = React.memo(({ onLogin }: LoginViewProps) => {
-  const [loading, setLoading] = useState(true);
-  const [members, setMembers] = useState<Member[]>([]);
-
-  useEffect(() => {
-    const unsubscribe = watchMembers((data) => {
-      const membersList = Object.values(data);
-      setMembers(membersList.sort((a, b) => a.name.localeCompare(b.name)));
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  if (loading) {
-    return (
-      <div id="login-loading-view" className="flex flex-col items-center justify-center h-full bg-[#f8fafc]">
-        <Loader2 className="size-10 text-[#00479e] animate-spin mb-4" />
-        <span className="text-sm font-bold uppercase tracking-widest text-slate-400">
-          Wird geladen...
-        </span>
-      </div>
-    );
-  }
+  const [members] = useState<Member[]>(() =>
+    [...USERS].sort((a, b) => a.name.localeCompare(b.name)),
+  );
 
   return (
     <div id="login-view-container" className="flex flex-col h-full bg-[#f8fafc] overflow-y-auto px-4 py-8">

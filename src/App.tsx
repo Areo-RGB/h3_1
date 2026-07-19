@@ -21,18 +21,7 @@ const ProfileView = lazy(() =>
   import('./features/auth/ProfileView').then((m) => ({ default: m.ProfileView })),
 );
 
-const CreateTraining = lazy(() =>
-  import('./features/events/CreateTraining').then((m) => ({ default: m.CreateTraining })),
-);
-const CreateSpiel = lazy(() =>
-  import('./features/events/CreateSpiel').then((m) => ({ default: m.CreateSpiel })),
-);
-const CreateTurnier = lazy(() =>
-  import('./features/events/CreateTurnier').then((m) => ({ default: m.CreateTurnier })),
-);
-const CreateEvent = lazy(() =>
-  import('./features/events/CreateEvent').then((m) => ({ default: m.CreateEvent })),
-);
+
 
 
 const LoginView = lazy(() =>
@@ -53,9 +42,6 @@ const ViewLoader = () => (
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<Tab>('activities');
-  const [activeSubView, setActiveSubView] = useState<
-    'none' | 'create-training' | 'create-spiel' | 'create-turnier' | 'create-event'
-  >('none');
   const isMobile = useIsMobile(640);
   const [currentUser, setCurrentUser] = useState<Member | null>(() => {
     try {
@@ -75,7 +61,6 @@ export default function App() {
     setCurrentUser(null);
     localStorage.removeItem('h03_current_user');
     setCurrentTab('activities');
-    setActiveSubView('none');
   }, []);
 
   if (!currentUser) {
@@ -103,69 +88,18 @@ export default function App() {
         id="app-container-main"
         className={`w-full ${isMobile ? 'max-w-full h-[100dvh]' : 'max-w-md h-[800px] my-8 rounded-3xl border-8 border-slate-800'} bg-white relative shadow-2xl flex flex-col overflow-hidden`}
       >
-        {activeSubView === 'none' && currentTab !== 'profile' && <HeaderNav />}
+        {currentTab !== 'profile' && <HeaderNav />}
         <InstallPrompt />
         <main id="app-main-content" className="pb-0 flex-1 flex flex-col min-h-0 overflow-y-auto overflow-x-hidden">
           <Suspense fallback={<ViewLoader />}>
-            {activeSubView === 'none' ? (
-              <>
-                {currentTab === 'activities' && (
-                  <ActivitiesGroup
-                    currentUser={currentUser}
-                    onNavigateToCreate={(view) => setActiveSubView(view)}
-                  />
-                )}
-                {currentTab === 'team' && <TeamGroup />}
-                {currentTab === 'profile' && (
-                  <ProfileView currentUser={currentUser} onLogout={handleLogout} />
-                )}
-              </>
-            ) : (
-              <>
-                {activeSubView === 'create-training' && (
-                  <CreateTraining
-                    onBack={() => setActiveSubView('none')}
-                    onSuccess={() => {
-                      setActiveSubView('none');
-                      setCurrentTab('activities');
-                    }}
-                  />
-                )}
-                {activeSubView === 'create-spiel' && (
-                  <CreateSpiel
-                    onBack={() => setActiveSubView('none')}
-                    onSuccess={() => {
-                      setActiveSubView('none');
-                      setCurrentTab('activities');
-                    }}
-                  />
-                )}
-                {activeSubView === 'create-turnier' && (
-                  <CreateTurnier
-                    onBack={() => setActiveSubView('none')}
-                    onSuccess={() => {
-                      setActiveSubView('none');
-                      setCurrentTab('activities');
-                    }}
-                  />
-                )}
-                {activeSubView === 'create-event' && (
-                  <CreateEvent
-                    onBack={() => setActiveSubView('none')}
-                    onSuccess={() => {
-                      setActiveSubView('none');
-                      setCurrentTab('activities');
-                    }}
-                  />
-                )}
-
-              </>
+            {currentTab === 'activities' && <ActivitiesGroup currentUser={currentUser} />}
+            {currentTab === 'team' && <TeamGroup />}
+            {currentTab === 'profile' && (
+              <ProfileView currentUser={currentUser} onLogout={handleLogout} />
             )}
           </Suspense>
         </main>
-        {activeSubView === 'none' && (
-          <BottomNav currentTab={currentTab} setCurrentTab={setCurrentTab} />
-        )}
+        <BottomNav currentTab={currentTab} setCurrentTab={setCurrentTab} />
       </div>
     </div>
   );

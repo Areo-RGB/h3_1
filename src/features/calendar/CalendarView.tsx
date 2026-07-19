@@ -1,20 +1,11 @@
-import React, { memo, useState } from 'react';
-import { CalendarDays, Plus } from 'lucide-react';
-import { Member } from '../../types';
-import { Button } from '../../components/ui/button';
-import { EventChoiceModal } from '../../components/EventChoiceModal';
+import React, { memo } from 'react';
+import { CalendarDays } from 'lucide-react';
 
 interface CalendarViewProps {
-  currentUser: Member;
-  onNavigateToCreate: (
-    view: 'create-training' | 'create-spiel' | 'create-turnier' | 'create-event',
-  ) => void;
   showHeader?: boolean;
 }
 
-export const CalendarView = memo(function CalendarView({ currentUser, onNavigateToCreate, showHeader = true }: CalendarViewProps) {
-  const [showChoiceModal, setShowChoiceModal] = useState(false);
-
+export const CalendarView = memo(function CalendarView({ showHeader = true }: CalendarViewProps) {
   return (
     <div className="flex flex-col h-full bg-slate-50 overflow-hidden view-layout">
       {showHeader && (
@@ -23,14 +14,6 @@ export const CalendarView = memo(function CalendarView({ currentUser, onNavigate
             <CalendarDays size={28} className="text-black" strokeWidth={2.5} />
             <h2 id="events-dashboard-title" className="text-3xl font-black uppercase tracking-tighter">Kalender</h2>
           </div>
-          {currentUser.type === 'admin' && (
-            <Button
-              onClick={() => setShowChoiceModal(true)}
-              className="bg-[#00479e] hover:bg-[#003a82] text-white flex items-center gap-2 px-4 py-2.5 rounded-xl text-base font-bold shadow-lg"
-            >
-              <Plus size={20} strokeWidth={3} /> Termin erstellen
-            </Button>
-          )}
         </div>
       )}
       <div className="flex-1 w-full p-2 bg-white">
@@ -43,11 +26,6 @@ export const CalendarView = memo(function CalendarView({ currentUser, onNavigate
           title="Team Calendar"
         />
       </div>
-      <EventChoiceModal
-        isOpen={showChoiceModal}
-        onClose={() => setShowChoiceModal(false)}
-        onSelect={(choice) => onNavigateToCreate(`create-${choice}` as 'create-training' | 'create-spiel')}
-      />
     </div>
   );
 });

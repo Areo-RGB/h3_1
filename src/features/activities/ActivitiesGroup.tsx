@@ -1,24 +1,17 @@
 import React, { useState, memo } from 'react';
-import { CalendarDays, ClipboardList, Plus } from 'lucide-react';
+import { CalendarDays, ClipboardList } from 'lucide-react';
 import { Member } from '../../types';
-import { Button } from '../../components/ui/button';
 import { CalendarView } from '../calendar/CalendarView';
 import { AnwesenheitView } from '../polls/AnwesenheitView';
-import { EventChoiceModal } from '../../components/EventChoiceModal';
 
 interface ActivitiesGroupProps {
   currentUser: Member;
-  onNavigateToCreate: (
-    view: 'create-training' | 'create-spiel' | 'create-turnier' | 'create-event',
-  ) => void;
 }
 
 export const ActivitiesGroup = memo(function ActivitiesGroup({
   currentUser,
-  onNavigateToCreate,
 }: ActivitiesGroupProps) {
   const [subTab, setSubTab] = useState<'calendar' | 'polls'>('calendar');
-  const [showChoiceModal, setShowChoiceModal] = useState(false);
 
   return (
     <div id="activities-group-container" className="flex flex-col h-full bg-slate-50 overflow-hidden">
@@ -29,15 +22,6 @@ export const ActivitiesGroup = memo(function ActivitiesGroup({
             <CalendarDays id="activities-title-icon" size={28} className="text-black" strokeWidth={2.5} />
             <h2 id="activities-group-title" className="text-3xl font-black uppercase tracking-tighter text-slate-900">Aktivitäten</h2>
           </div>
-          {subTab === 'calendar' && currentUser.type === 'admin' && (
-            <Button
-              id="activities-create-btn"
-              onClick={() => setShowChoiceModal(true)}
-              className="bg-[#00479e] hover:bg-[#003a82] text-white flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-bold shadow-sm transition-all"
-            >
-              <Plus id="activities-plus-icon" size={16} strokeWidth={3} /> Erstellen
-            </Button>
-          )}
         </div>
 
         {/* Segmented Control / Collation Tabs */}
@@ -73,8 +57,6 @@ export const ActivitiesGroup = memo(function ActivitiesGroup({
       <div id="activities-group-content" className="flex-1 min-h-0 overflow-hidden relative">
         {subTab === 'calendar' ? (
           <CalendarView
-            currentUser={currentUser}
-            onNavigateToCreate={onNavigateToCreate}
             showHeader={false}
           />
         ) : (
@@ -84,12 +66,6 @@ export const ActivitiesGroup = memo(function ActivitiesGroup({
           />
         )}
       </div>
-
-      <EventChoiceModal
-        isOpen={showChoiceModal}
-        onClose={() => setShowChoiceModal(false)}
-        onSelect={(choice) => onNavigateToCreate(`create-${choice}` as 'create-training' | 'create-spiel')}
-      />
     </div>
   );
 });
