@@ -22,6 +22,7 @@ import {
   watchEvents,
 } from '../../lib/dataRepository';
 import { displayTerminTitle } from '../../lib/terminDisplay';
+import FussballdeWidget from '../../components/FussballdeWidget';
 
 const HOME_GAME_ADDRESS = 'Ernst-Reuter-Sportfeld';
 
@@ -186,6 +187,9 @@ export const EventsDashboard = memo(({ currentUser }: EventsDashboardProps) => {
 
   return (
     <div id="events-dashboard-view" className="view-layout pb-8">
+      <div className="px-3 pt-4 pb-2">
+        <FussballdeWidget id="4406d4cd-6750-42ff-9e6a-616c8b66dc9e" type="next-match" />
+      </div>
       {groupedTermine.groups.length === 0 ? (
         <div className="p-8 text-center text-slate-500 italic">Keine Termine vorhanden.</div>
       ) : (

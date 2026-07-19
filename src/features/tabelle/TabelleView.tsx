@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
 import { Table } from 'lucide-react';
+import FussballdeWidget from '../../components/FussballdeWidget';
 
 export const TabelleView = memo(function TabelleView() {
   return (
@@ -11,14 +12,7 @@ export const TabelleView = memo(function TabelleView() {
         </div>
       </div>
       <div className="flex-1 w-full p-2 bg-white overflow-y-auto scrollbar-hide">
-        <iframe 
-          className="scrollbar-hide"
-          src="https://fussball-proxy.paziske.workers.dev/widget/competition/9f997bf6-4621-497b-868c-8036198457ab" 
-          width="100%" 
-          height="100%" 
-          style={{ border: 'none', minHeight: '600px' }}
-          title="Fussball.de Widget">
-        </iframe>
+        <FussballdeWidget id="9f997bf6-4621-497b-868c-8036198457ab" type="competition" />
       </div>
     </div>
   );
