@@ -3,9 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useCallback, lazy, Suspense } from 'react';
-import { HeaderNav } from './components/HeaderNav';
-import { BottomNav } from './components/BottomNav';
+import { useState, useCallback, lazy, Suspense } from 'react';
 import { Tab, Member } from './types';
 import { useIsMobile } from './hooks/use-mobile';
 import { InstallPrompt } from './components/InstallPrompt';
@@ -20,9 +18,6 @@ const TeamGroup = lazy(() =>
 const ProfileView = lazy(() =>
   import('./features/auth/ProfileView').then((m) => ({ default: m.ProfileView })),
 );
-
-
-
 
 const LoginView = lazy(() =>
   import('./features/auth/LoginView').then((m) => ({ default: m.LoginView })),
@@ -63,43 +58,32 @@ export default function App() {
     setCurrentTab('activities');
   }, []);
 
-  if (!currentUser) {
-    return (
-      <div id="app-root-login" className="h-[100dvh] overflow-hidden bg-white text-[#333] font-sans selection:bg-[#00479e] selection:text-white flex items-center justify-center">
-        <div
-          id="app-container-login"
-          className={`w-full ${isMobile ? 'max-w-full h-[100dvh]' : 'max-w-md h-[800px] my-8 rounded-3xl'} bg-white relative shadow-2xl flex flex-col overflow-hidden`}
-        >
-          <HeaderNav />
-          <InstallPrompt />
-          <main id="app-main-login" className="pb-0 flex-1 flex flex-col min-h-0 overflow-y-auto overflow-x-hidden bg-slate-50">
-            <Suspense fallback={<ViewLoader />}>
-              <LoginView onLogin={handleLogin} />
-            </Suspense>
-          </main>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div id="app-root-main" className="h-[100dvh] overflow-hidden bg-white text-[#333] font-sans selection:bg-[#00479e] selection:text-white flex items-center justify-center">
+    <div id="app-root" className="h-[100dvh] overflow-hidden bg-white text-[#333] font-sans selection:bg-[#00479e] selection:text-white flex items-center justify-center">
       <div
-        id="app-container-main"
+        id="app-container"
         className={`w-full ${isMobile ? 'max-w-full h-[100dvh]' : 'max-w-md h-[800px] my-8 rounded-3xl border-8 border-slate-800'} bg-white relative shadow-2xl flex flex-col overflow-hidden`}
       >
-        {currentTab !== 'profile' && <HeaderNav />}
         <InstallPrompt />
-        <main id="app-main-content" className="pb-0 flex-1 flex flex-col min-h-0 overflow-y-auto overflow-x-hidden">
+        <main id="app-main" className="flex-1 flex flex-col min-h-0 overflow-y-auto overflow-x-hidden">
           <Suspense fallback={<ViewLoader />}>
-            {currentTab === 'activities' && <ActivitiesGroup currentUser={currentUser} />}
-            {currentTab === 'team' && <TeamGroup />}
-            {currentTab === 'profile' && (
-              <ProfileView currentUser={currentUser} onLogout={handleLogout} />
+            {!currentUser ? (
+              <LoginView onLogin={handleLogin} />
+            ) : (
+              <>
+                {currentTab === 'activities' && (
+                  <ActivitiesGroup currentUser={currentUser} currentTab={currentTab} setCurrentTab={setCurrentTab} />
+                )}
+                {currentTab === 'team' && (
+                  <TeamGroup currentTab={currentTab} setCurrentTab={setCurrentTab} />
+                )}
+                {currentTab === 'profile' && (
+                  <ProfileView currentUser={currentUser} onLogout={handleLogout} currentTab={currentTab} setCurrentTab={setCurrentTab} />
+                )}
+              </>
             )}
           </Suspense>
         </main>
-        <BottomNav currentTab={currentTab} setCurrentTab={setCurrentTab} />
       </div>
     </div>
   );

@@ -9,7 +9,7 @@ interface BottomNavProps {
 
 const navItems = [
   { id: 'activities', icon: CalendarIcon, label: 'Aktivitäten' },
-  { id: 'team', icon: Shield, label: 'Team & Liga' },
+  { id: 'team', icon: Shield, label: 'Liga' },
   { id: 'profile', icon: User, label: 'Profil' },
 ] as const;
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Member } from '../../types';
+import { Layout } from '../../components/Layout';
 import { Avatar, AvatarImage, AvatarFallback } from '../../components/ui/avatar';
 import { LogIn } from 'lucide-react';
 import { USERS } from '../../lib/users';
@@ -14,17 +15,9 @@ export const LoginView = React.memo(({ onLogin }: LoginViewProps) => {
   );
 
   return (
-    <div id="login-view-container" className="flex flex-col h-full bg-[#f8fafc] overflow-y-auto px-4 py-8">
-      <div id="login-header" className="flex flex-col items-center mb-8">
-        <div id="login-icon-box" className="size-16 bg-[#00479e] rounded-2xl flex items-center justify-center shadow-lg mb-4">
-          <LogIn size={32} className="text-white" />
-        </div>
-        <h2 id="login-title" className="text-3xl font-black uppercase tracking-tighter text-slate-900">Anmeldung</h2>
-      </div>
-
-      <div id="login-main-section" className="max-w-md mx-auto w-full">
+    <Layout title="Anmeldung" icon={LogIn} showFooter={false}>
+      <div id="login-main-section" className="flex-1 p-4 max-w-md mx-auto w-full">
         <div id="login-inner-box" className="flex flex-col gap-6">
-          <h3 id="login-instruction" className="text-xl font-bold text-slate-900 text-center">Wähle deinen Namen</h3>
           <div id="login-members-grid" className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {members.map((user) => (
               <button
@@ -45,7 +38,7 @@ export const LoginView = React.memo(({ onLogin }: LoginViewProps) => {
           </div>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 });
 
