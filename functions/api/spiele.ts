@@ -17,6 +17,35 @@ function unescapeIcalText(value: string): string {
     .replace(/\\;/g, ';')
     .replace(/\\\\/g, '\\');
 }
+const berlinDateFormatter = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'Europe/Berlin',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
+function formatBerlinDate(date: Date): string {
+  const parts = berlinDateFormatter.formatToParts(date);
+  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function parseEventDate(value: string): string {
+  const match = value.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?)?(Z)?$/);
+
+  if (!match) {
+    return '';
+  }
+
+  if (match[7] && match[4] && match[5]) {
+    const timestamp = `${match[1]}-${match[2]}-${match[3]}T${match[4]}:${match[5]}:${match[6] ?? '00'}Z`;
+    return formatBerlinDate(new Date(timestamp));
+  }
+
+  return `${match[1]}-${match[2]}-${match[3]}`;
+}
+
 
 export function parseSpieleEvents(ics: string, today: string): SpieleEvent[] {
   const unfolded = ics.replace(/\r?\n[ \t]/g, '');
@@ -25,10 +54,10 @@ export function parseSpieleEvents(ics: string, today: string): SpieleEvent[] {
       const lines = match[1].split(/\r?\n/);
       const summary = unescapeIcalText(getProperty(lines, 'SUMMARY'));
       const categories = unescapeIcalText(getProperty(lines, 'CATEGORIES'));
-      const dateMatch = getProperty(lines, 'DTSTART').match(/^(\d{4})(\d{2})(\d{2})/);
+      const date = parseEventDate(getProperty(lines, 'DTSTART'));
 
       return {
-        date: dateMatch ? `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}` : '',
+        date,
         summary,
         categories,
         status: getProperty(lines, 'STATUS'),
@@ -37,7 +66,7 @@ export function parseSpieleEvents(ics: string, today: string): SpieleEvent[] {
     .filter(({ date, summary, categories, status }) =>
       date >= today
       && status.toUpperCase() !== 'CANCELLED'
-      && /(^|\W)spiele?(\W|$)/i.test(`${summary} ${categories}`),
+      && (/(^|\W)spiele?(\W|$)/i.test(`${summary} ${categories}`) || /\s[-–—]\s/.test(summary)),
     )
     .map(({ date, summary }) => ({ date, summary }))
     .sort((a, b) => a.date.localeCompare(b.date) || a.summary.localeCompare(b.summary));
@@ -47,17 +76,6 @@ export function parseSpieleEvents(ics: string, today: string): SpieleEvent[] {
   );
 }
 
-function getBerlinDate(): string {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Europe/Berlin',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(new Date());
-  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
-
-  return `${values.year}-${values.month}-${values.day}`;
-}
 
 export const onRequestGet = async (): Promise<Response> => {
   const response = await fetch(CALENDAR_ICS_URL);
@@ -66,7 +84,7 @@ export const onRequestGet = async (): Promise<Response> => {
     return Response.json({ error: 'Calendar unavailable' }, { status: 502 });
   }
 
-  const events = parseSpieleEvents(await response.text(), getBerlinDate());
+  const events = parseSpieleEvents(await response.text(), formatBerlinDate(new Date()));
 
   return Response.json(
     { nextDate: events[0]?.date ?? null, events },
