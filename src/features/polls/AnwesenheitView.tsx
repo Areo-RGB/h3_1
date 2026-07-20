@@ -7,11 +7,6 @@ interface AnwesenheitViewProps {
   hideTitle?: boolean;
 }
 
-interface SpieleEvent {
-  date: string;
-  summary: string;
-  value: string;
-}
 
 function getBerlinDate(): string {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -27,8 +22,7 @@ function getBerlinDate(): string {
 
 export const AnwesenheitView = memo(function AnwesenheitView({ currentUser, hideTitle = false }: AnwesenheitViewProps) {
   const [activeTab, setActiveTab] = useState<'training' | 'spiele'>('training');
-  const [spieleEvents, setSpieleEvents] = useState<SpieleEvent[]>([]);
-  const [selectedSpiel, setSelectedSpiel] = useState('');
+  const [spieleReady, setSpieleReady] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -39,16 +33,11 @@ export const AnwesenheitView = memo(function AnwesenheitView({ currentUser, hide
           throw new Error(`Calendar request failed: ${response.status}`);
         }
 
-        return response.json() as Promise<{ events: SpieleEvent[] }>;
-      })
-      .then(({ events }) => {
-        setSpieleEvents(events);
-        setSelectedSpiel((current) => current || events[0]?.value || '');
+        setSpieleReady(true);
       })
       .catch((error: unknown) => {
         if (!(error instanceof DOMException && error.name === 'AbortError')) {
-          setSpieleEvents([]);
-          setSelectedSpiel('');
+          setSpieleReady(true);
         }
       });
 
@@ -62,8 +51,7 @@ export const AnwesenheitView = memo(function AnwesenheitView({ currentUser, hide
 
   const spieleBaseUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdgtDs9vgB7mQSEMZ7kNiqZQ6aqDgXiHjeQ-23edP9ahIh7DA/viewform?embedded=true";
   const spieleNameParam = currentUser?.name ? `&entry.999718010=${encodeURIComponent(currentUser.name)}` : '';
-  const spieleSelectionParam = selectedSpiel ? `&entry.738056957=${encodeURIComponent(selectedSpiel)}` : '';
-  const spieleFormUrl = `${spieleBaseUrl}${spieleNameParam}${spieleSelectionParam}`;
+  const spieleFormUrl = `${spieleBaseUrl}${spieleNameParam}`;
 
   return (
     <div className="flex flex-col h-full bg-slate-50 overflow-hidden view-layout">
@@ -137,27 +125,7 @@ export const AnwesenheitView = memo(function AnwesenheitView({ currentUser, hide
           </iframe>
         )}
         {activeTab === 'spiele' && (
-          <div className="absolute inset-0 flex flex-col gap-2 bg-white p-2">
-            <label htmlFor="spiele-select" className="text-sm font-bold text-slate-700">
-              Spiel auswählen
-            </label>
-            <select
-              id="spiele-select"
-              value={selectedSpiel}
-              onChange={(event) => setSelectedSpiel(event.target.value)}
-              disabled={spieleEvents.length === 0}
-              className="w-full shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
-            >
-              {spieleEvents.length === 0 ? (
-                <option value="">Keine Spiele gefunden</option>
-              ) : (
-                spieleEvents.map((event) => (
-                  <option key={`${event.date}-${event.summary}`} value={event.value}>
-                    {event.value}
-                  </option>
-                ))
-              )}
-            </select>
+          spieleReady ? (
             <iframe
               src={spieleFormUrl}
               width="100%"
@@ -166,11 +134,15 @@ export const AnwesenheitView = memo(function AnwesenheitView({ currentUser, hide
               marginHeight={0}
               marginWidth={0}
               title="Spiele Form"
-              className="min-h-0 flex-1 w-full rounded-b-md"
+              className="absolute inset-0 w-full h-full rounded-b-md"
             >
               Loading…
             </iframe>
-          </div>
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-500">
+              Spiele werden geladen…
+            </div>
+          )
         )}
       </div>
     </div>
