@@ -1,4 +1,4 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { ClipboardList } from 'lucide-react';
 import { Member } from '../../types';
 
@@ -21,6 +21,28 @@ function getBerlinDate(): string {
 
 export const AnwesenheitView = memo(function AnwesenheitView({ currentUser, hideTitle = false }: AnwesenheitViewProps) {
   const [activeTab, setActiveTab] = useState<'training' | 'spiele'>('training');
+  const [spieleDate, setSpieleDate] = useState<string | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch('/api/spiele', { signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Calendar request failed: ${response.status}`);
+        }
+
+        return response.json() as Promise<{ nextDate: string | null }>;
+      })
+      .then(({ nextDate }) => setSpieleDate(nextDate))
+      .catch((error: unknown) => {
+        if (!(error instanceof DOMException && error.name === 'AbortError')) {
+          setSpieleDate(null);
+        }
+      });
+
+    return () => controller.abort();
+  }, []);
 
   const trainingBaseUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdr_dv4ue-WXtkRpmEFlKNIC1WRgE1bgBzTxsoRjhlkG3-hdg/viewform?embedded=true";
   const trainingNameParam = currentUser?.name ? `&entry.1364644614=${encodeURIComponent(currentUser.name)}` : '';
@@ -29,7 +51,8 @@ export const AnwesenheitView = memo(function AnwesenheitView({ currentUser, hide
 
   const spieleBaseUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdgtDs9vgB7mQSEMZ7kNiqZQ6aqDgXiHjeQ-23edP9ahIh7DA/viewform?embedded=true";
   const spieleNameParam = currentUser?.name ? `&entry.999718010=${encodeURIComponent(currentUser.name)}` : '';
-  const spieleFormUrl = `${spieleBaseUrl}${spieleNameParam}`;
+  const spieleDateParam = spieleDate ? `&entry.1230423815=${spieleDate}` : '';
+  const spieleFormUrl = `${spieleBaseUrl}${spieleNameParam}${spieleDateParam}`;
 
   return (
     <div className="flex flex-col h-full bg-slate-50 overflow-hidden view-layout">
@@ -44,8 +67,8 @@ export const AnwesenheitView = memo(function AnwesenheitView({ currentUser, hide
             <button
               onClick={() => setActiveTab('training')}
               className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all duration-200 ${activeTab === 'training'
-                  ? 'bg-white text-[#00479e] shadow-[0_1px_3px_rgba(0,0,0,0.1)]'
-                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+                ? 'bg-white text-[#00479e] shadow-[0_1px_3px_rgba(0,0,0,0.1)]'
+                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
                 }`}
             >
               Training
@@ -53,8 +76,8 @@ export const AnwesenheitView = memo(function AnwesenheitView({ currentUser, hide
             <button
               onClick={() => setActiveTab('spiele')}
               className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all duration-200 ${activeTab === 'spiele'
-                  ? 'bg-white text-[#00479e] shadow-[0_1px_3px_rgba(0,0,0,0.1)]'
-                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+                ? 'bg-white text-[#00479e] shadow-[0_1px_3px_rgba(0,0,0,0.1)]'
+                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
                 }`}
             >
               Spiele
@@ -68,8 +91,8 @@ export const AnwesenheitView = memo(function AnwesenheitView({ currentUser, hide
               id="anwesenheit-training-tab"
               onClick={() => setActiveTab('training')}
               className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all duration-200 ${activeTab === 'training'
-                  ? 'bg-white text-[#00479e] shadow-[0_1px_3px_rgba(0,0,0,0.1)]'
-                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+                ? 'bg-white text-[#00479e] shadow-[0_1px_3px_rgba(0,0,0,0.1)]'
+                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
                 }`}
             >
               Training
@@ -78,8 +101,8 @@ export const AnwesenheitView = memo(function AnwesenheitView({ currentUser, hide
               id="anwesenheit-spiele-tab"
               onClick={() => setActiveTab('spiele')}
               className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all duration-200 ${activeTab === 'spiele'
-                  ? 'bg-white text-[#00479e] shadow-[0_1px_3px_rgba(0,0,0,0.1)]'
-                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+                ? 'bg-white text-[#00479e] shadow-[0_1px_3px_rgba(0,0,0,0.1)]'
+                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
                 }`}
             >
               Spiele
