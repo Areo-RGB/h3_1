@@ -6,6 +6,10 @@ const trainingTotalElement = document.querySelector('#training-total');
 const gamesListElement = document.querySelector('#games-list');
 const updatedAtElement = document.querySelector('#updated-at');
 const refreshButton = document.querySelector('#refresh-button');
+const overviewViewElement = document.querySelector('#overview-view');
+const tableViewElement = document.querySelector('#table-view');
+const trainingTableBodyElement = document.querySelector('#training-table-body');
+const navItems = [...document.querySelectorAll('.nav-item')];
 
 function createNameList(names) {
   if (names.length === 0) {
@@ -121,6 +125,42 @@ function renderGames(games) {
   }
 }
 
+function renderTrainingTable(rows) {
+  trainingTableBodyElement.replaceChildren();
+
+  for (const row of rows) {
+    const tableRow = document.createElement('tr');
+    const nameCell = document.createElement('td');
+    nameCell.textContent = row.name;
+    const countCell = document.createElement('td');
+    const count = document.createElement('span');
+    count.className = 'table-count';
+    count.textContent = row.absagen;
+    count.setAttribute('aria-label', `${row.absagen} Training-Absagen`);
+    countCell.append(count);
+    tableRow.append(nameCell, countCell);
+    trainingTableBodyElement.append(tableRow);
+  }
+}
+
+function showView(view) {
+  const showOverview = view === 'overview';
+  overviewViewElement.hidden = !showOverview;
+  tableViewElement.hidden = showOverview;
+  weekLabelElement.textContent = showOverview
+    ? weekLabelElement.dataset.overviewLabel
+    : 'Alle erfassten Trainingstermine';
+
+  for (const item of navItems) {
+    const active = item.dataset.view === view;
+    item.classList.toggle('active', active);
+    item.setAttribute('aria-selected', String(active));
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+
 async function loadFeedback() {
   refreshButton.disabled = true;
   statusElement.hidden = false;
@@ -132,9 +172,13 @@ async function loadFeedback() {
     if (!response.ok) throw new Error(`Feedback request failed: ${response.status}`);
     const data = await response.json();
 
-    weekLabelElement.textContent = data.week.label;
+    weekLabelElement.dataset.overviewLabel = data.week.label;
+    weekLabelElement.textContent = tableViewElement.hidden
+      ? data.week.label
+      : 'Alle erfassten Trainingstermine';
     renderTraining(data.training);
     renderGames(data.games);
+    renderTrainingTable(data.trainingTable);
     updatedAtElement.textContent = `Stand: ${new Intl.DateTimeFormat('de-DE', {
       dateStyle: 'short',
       timeStyle: 'short',
@@ -152,6 +196,10 @@ async function loadFeedback() {
   } finally {
     refreshButton.disabled = false;
   }
+}
+
+for (const item of navItems) {
+  item.addEventListener('click', () => showView(item.dataset.view));
 }
 
 refreshButton.addEventListener('click', loadFeedback);

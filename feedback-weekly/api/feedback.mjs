@@ -3,6 +3,25 @@ import * as XLSX from 'xlsx';
 const FEEDBACK_ODS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRJNo_nXAtAp7jSLmC535Xd2HRx3TTRXMen2_dj2hfZnRbuP3IRe9JSj5pED_XDyv9uPvJYVZkVnd2_/pub?output=ods';
 const CALENDAR_ICS_URL = 'https://calendar.google.com/calendar/ical/09d3a4912c1f0189356e2efffafd8eedafbabedb79b3a6a4080ed47dadcb6626%40group.calendar.google.com/public/basic.ics';
 const DAY_IN_MS = 86_400_000;
+const TEAM_NAMES = [
+  'Alex',
+  'Arturo',
+  'Arvid',
+  'Finley',
+  'Jakob',
+  'Lasse',
+  'Lennox',
+  'Levi',
+  'Lion',
+  'Lionel',
+  'Milan',
+  'Paul',
+  'Peter',
+  'Silas',
+  'Tayo',
+  'Tommy',
+];
+
 
 const berlinDateFormatter = new Intl.DateTimeFormat('en-CA', {
   timeZone: 'Europe/Berlin',
@@ -171,6 +190,26 @@ function buildTrainingSummary(rows, scheduledDates, week) {
     }));
 }
 
+function buildTrainingTable(rows) {
+  const counts = new Map(TEAM_NAMES.map((name) => [name, 0]));
+  const countedAbsences = new Set();
+
+  for (const row of rows) {
+    const date = parseResponseDate(row.Training);
+    const name = String(row.Name ?? '').trim();
+    const key = `${name}|${date}`;
+    if (!date || !counts.has(name) || countedAbsences.has(key)) continue;
+
+    countedAbsences.add(key);
+    counts.set(name, counts.get(name) + 1);
+  }
+
+  return [...counts.entries()]
+    .map(([name, absagen]) => ({ name, absagen }))
+    .sort((a, b) => a.absagen - b.absagen || a.name.localeCompare(b.name, 'de'));
+}
+
+
 function parseGameChoice(value) {
   const text = String(value ?? '').trim();
   const match = text.match(/^(.*?)\s+–\s+(\d{1,2}\.\d{1,2}\.\d{4})$/);
@@ -250,6 +289,7 @@ export default async function handler(_request, response) {
         trainingAbsences: trainingAbsencesByPlayer.get(name) ?? 0,
       })),
     }));
+    const trainingTable = buildTrainingTable(trainingRows);
 
 
     response.setHeader('Cache-Control', 'no-store, max-age=0');
@@ -257,6 +297,7 @@ export default async function handler(_request, response) {
       week,
       training,
       games,
+      trainingTable,
       updatedAt: new Date().toISOString(),
     });
   } catch (error) {
