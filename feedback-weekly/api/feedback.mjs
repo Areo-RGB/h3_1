@@ -218,9 +218,10 @@ function buildGameSummary(rows, scheduledGames, week) {
 
 export default async function handler(_request, response) {
   try {
+    const cacheBuster = Date.now();
     const [odsResponse, calendarResponse] = await Promise.all([
-      fetch(FEEDBACK_ODS_URL),
-      fetch(CALENDAR_ICS_URL),
+      fetch(`${FEEDBACK_ODS_URL}&cb=${cacheBuster}`, { cache: 'no-store' }),
+      fetch(`${CALENDAR_ICS_URL}?cb=${cacheBuster}`, { cache: 'no-store' }),
     ]);
     if (!odsResponse.ok || !calendarResponse.ok) {
       throw new Error(`Source unavailable: ODS ${odsResponse.status}, calendar ${calendarResponse.status}`);
@@ -236,7 +237,7 @@ export default async function handler(_request, response) {
     const trainingRows = rowsAsObjects(rowsFromSheet(workbook, trainingSheet));
     const gameRows = rowsAsObjects(rowsFromSheet(workbook, gameSheet));
 
-    response.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+    response.setHeader('Cache-Control', 'no-store, max-age=0');
     response.status(200).json({
       week,
       training: buildTrainingSummary(trainingRows, calendar.trainingDates, week),

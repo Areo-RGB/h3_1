@@ -147,3 +147,8 @@ async function loadFeedback() {
 
 refreshButton.addEventListener('click', loadFeedback);
 loadFeedback();
+window.setInterval(() => {
+  if (!document.hidden) {
+    void loadFeedback();
+  }
+}, 60_000);
