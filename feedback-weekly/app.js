@@ -102,10 +102,19 @@ function renderGames(games) {
       counts.append(stat);
     }
 
+    const zusagenNames = (game.zusagenPlayers ?? game.zusagenNames.map((name) => ({
+      name,
+      trainingAbsences: 0,
+    }))).map(({ name, trainingAbsences }) => (
+      trainingAbsences > 0
+        ? `${name} [${Array(trainingAbsences).fill('X').join(' ')}]`
+        : name
+    ));
+
     card.append(
       label,
       counts,
-      createRoster('Zusagen', game.zusagenNames),
+      createRoster('Zusagen', zusagenNames),
       createRoster('Absagen', game.absagenNames),
     );
     gamesListElement.append(card);

@@ -236,12 +236,27 @@ export default async function handler(_request, response) {
     const calendar = parseCalendar(await calendarResponse.text(), week);
     const trainingRows = rowsAsObjects(rowsFromSheet(workbook, trainingSheet));
     const gameRows = rowsAsObjects(rowsFromSheet(workbook, gameSheet));
+    const training = buildTrainingSummary(trainingRows, calendar.trainingDates, week);
+    const trainingAbsencesByPlayer = new Map();
+    for (const session of training) {
+      for (const name of session.names) {
+        trainingAbsencesByPlayer.set(name, (trainingAbsencesByPlayer.get(name) ?? 0) + 1);
+      }
+    }
+    const games = buildGameSummary(gameRows, calendar.games, week).map((game) => ({
+      ...game,
+      zusagenPlayers: game.zusagenNames.map((name) => ({
+        name,
+        trainingAbsences: trainingAbsencesByPlayer.get(name) ?? 0,
+      })),
+    }));
+
 
     response.setHeader('Cache-Control', 'no-store, max-age=0');
     response.status(200).json({
       week,
-      training: buildTrainingSummary(trainingRows, calendar.trainingDates, week),
-      games: buildGameSummary(gameRows, calendar.games, week),
+      training,
+      games,
       updatedAt: new Date().toISOString(),
     });
   } catch (error) {
