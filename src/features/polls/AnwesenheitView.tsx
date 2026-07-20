@@ -8,36 +8,25 @@ interface AnwesenheitViewProps {
 }
 
 
-function getBerlinDate(): string {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Europe/Berlin',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(new Date());
-  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
-
-  return `${values.year}-${values.month}-${values.day}`;
-}
 
 export const AnwesenheitView = memo(function AnwesenheitView({ currentUser, hideTitle = false }: AnwesenheitViewProps) {
   const [activeTab, setActiveTab] = useState<'training' | 'spiele'>('training');
-  const [spieleReady, setSpieleReady] = useState(false);
+  const [formsReady, setFormsReady] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
 
-    fetch('/api/spiele', { signal: controller.signal })
+    fetch('/api/activities', { signal: controller.signal })
       .then((response) => {
         if (!response.ok) {
           throw new Error(`Calendar request failed: ${response.status}`);
         }
 
-        setSpieleReady(true);
+        setFormsReady(true);
       })
       .catch((error: unknown) => {
         if (!(error instanceof DOMException && error.name === 'AbortError')) {
-          setSpieleReady(true);
+          setFormsReady(true);
         }
       });
 
@@ -46,8 +35,7 @@ export const AnwesenheitView = memo(function AnwesenheitView({ currentUser, hide
 
   const trainingBaseUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdr_dv4ue-WXtkRpmEFlKNIC1WRgE1bgBzTxsoRjhlkG3-hdg/viewform?embedded=true";
   const trainingNameParam = currentUser?.name ? `&entry.1364644614=${encodeURIComponent(currentUser.name)}` : '';
-  const trainingDateParam = `&entry.539593056=${getBerlinDate()}`;
-  const trainingFormUrl = `${trainingBaseUrl}${trainingNameParam}${trainingDateParam}`;
+  const trainingFormUrl = `${trainingBaseUrl}${trainingNameParam}`;
 
   const spieleBaseUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdgtDs9vgB7mQSEMZ7kNiqZQ6aqDgXiHjeQ-23edP9ahIh7DA/viewform?embedded=true";
   const spieleNameParam = currentUser?.name ? `&entry.999718010=${encodeURIComponent(currentUser.name)}` : '';
@@ -111,21 +99,27 @@ export const AnwesenheitView = memo(function AnwesenheitView({ currentUser, hide
       )}
       <div className="flex-1 w-full p-2 bg-white relative">
         {activeTab === 'training' && (
-          <iframe
-            src={trainingFormUrl}
-            width="100%"
-            height="100%"
-            frameBorder="0"
-            marginHeight={0}
-            marginWidth={0}
-            title="Umfrage Form"
-            className="absolute inset-0 w-full h-full rounded-b-md"
-          >
-            Loading…
-          </iframe>
+          formsReady ? (
+            <iframe
+              src={trainingFormUrl}
+              width="100%"
+              height="100%"
+              frameBorder="0"
+              marginHeight={0}
+              marginWidth={0}
+              title="Umfrage Form"
+              className="absolute inset-0 w-full h-full rounded-b-md"
+            >
+              Loading…
+            </iframe>
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-500">
+              Formulare werden geladen…
+            </div>
+          )
         )}
         {activeTab === 'spiele' && (
-          spieleReady ? (
+          formsReady ? (
             <iframe
               src={spieleFormUrl}
               width="100%"
@@ -140,7 +134,7 @@ export const AnwesenheitView = memo(function AnwesenheitView({ currentUser, hide
             </iframe>
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-500">
-              Spiele werden geladen…
+              Formulare werden geladen…
             </div>
           )
         )}

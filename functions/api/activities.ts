@@ -1,11 +1,24 @@
 const CALENDAR_ICS_URL = 'https://calendar.google.com/calendar/ical/09d3a4912c1f0189356e2efffafd8eedafbabedb79b3a6a4080ed47dadcb6626%40group.calendar.google.com/public/basic.ics';
-const SPIELE_FORM_ID = '16ttyd6qu0NiYnTL2eDZizbDKSzOyrTIkAg3kDoaPNsM';
-const SPIELE_ITEM_ID = '12912576';
 
-interface SpieleEvent {
+const SPIELE_FORM = {
+  formId: '16ttyd6qu0NiYnTL2eDZizbDKSzOyrTIkAg3kDoaPNsM',
+  itemId: '12912576',
+  title: 'Spiele',
+};
+
+const TRAINING_FORM = {
+  formId: '1YOvq5Let5pjrDefdYk_hmiX-bV8lQyCYXpA19p1NLeY',
+  itemId: '4f7aa945',
+  title: 'Training',
+};
+
+interface ActivityChoice {
   date: string;
-  summary: string;
   value: string;
+}
+
+interface SpieleEvent extends ActivityChoice {
+  summary: string;
 }
 
 interface ServiceAccount {
@@ -22,16 +35,32 @@ interface PagesContext {
   env: Env;
 }
 
+interface FormTarget {
+  formId: string;
+  itemId: string;
+  title: string;
+}
+
 const berlinDateFormatter = new Intl.DateTimeFormat('en-US', {
   timeZone: 'Europe/Berlin',
   year: 'numeric',
   month: '2-digit',
   day: '2-digit',
 });
+const germanWeekdayFormatter = new Intl.DateTimeFormat('de-DE', {
+  timeZone: 'UTC',
+  weekday: 'long',
+});
 
 function getProperty(lines: string[], name: string): string {
   const line = lines.find((candidate) => candidate.startsWith(`${name}:`) || candidate.startsWith(`${name};`));
   return line?.slice(line.indexOf(':') + 1) ?? '';
+}
+
+function getProperties(lines: string[], name: string): string[] {
+  return lines
+    .filter((candidate) => candidate.startsWith(`${name}:`) || candidate.startsWith(`${name};`))
+    .map((line) => line.slice(line.indexOf(':') + 1));
 }
 
 function unescapeIcalText(value: string): string {
@@ -64,24 +93,40 @@ function parseEventDate(value: string): string {
   return `${match[1]}-${match[2]}-${match[3]}`;
 }
 
-function formatChoiceValue(summary: string, date: string): string {
+function getEventLines(ics: string): string[][] {
+  const unfolded = ics.replace(/\r?\n[ \t]/g, '');
+  return [...unfolded.matchAll(/BEGIN:VEVENT\r?\n([\s\S]*?)END:VEVENT/g)]
+    .map((match) => match[1].split(/\r?\n/));
+}
+
+function parseIsoDate(value: string): Date {
+  return new Date(`${value}T00:00:00Z`);
+}
+
+function formatIsoDate(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function formatGermanDate(date: string): string {
+  const parsed = parseIsoDate(date);
   const [year, month, day] = date.split('-');
-  return `${summary} – ${day}.${month}.${year}`;
+  return `${germanWeekdayFormatter.format(parsed)} ${day}.${month}.${year}`;
 }
 
 export function parseSpieleEvents(ics: string, today: string): SpieleEvent[] {
-  const unfolded = ics.replace(/\r?\n[ \t]/g, '');
-  const events = [...unfolded.matchAll(/BEGIN:VEVENT\r?\n([\s\S]*?)END:VEVENT/g)]
-    .map((match) => {
-      const lines = match[1].split(/\r?\n/);
+  const events = getEventLines(ics)
+    .map((lines) => {
       const summary = unescapeIcalText(getProperty(lines, 'SUMMARY'));
       const categories = unescapeIcalText(getProperty(lines, 'CATEGORIES'));
+      const date = parseEventDate(getProperty(lines, 'DTSTART'));
+      const [year, month, day] = date.split('-');
 
       return {
-        date: parseEventDate(getProperty(lines, 'DTSTART')),
+        date,
         summary,
         categories,
         status: getProperty(lines, 'STATUS'),
+        value: `${summary} – ${day}.${month}.${year}`,
       };
     })
     .filter(({ date, summary, categories, status }) =>
@@ -89,12 +134,67 @@ export function parseSpieleEvents(ics: string, today: string): SpieleEvent[] {
       && status.toUpperCase() !== 'CANCELLED'
       && (/(^|\W)spiele?(\W|$)/i.test(`${summary} ${categories}`) || /\s[-–—]\s/.test(summary)),
     )
-    .map(({ date, summary }) => ({ date, summary, value: formatChoiceValue(summary, date) }))
+    .map(({ date, summary, value }) => ({ date, summary, value }))
     .sort((a, b) => a.date.localeCompare(b.date) || a.summary.localeCompare(b.summary));
 
   return events.filter((event, index) =>
     index === 0 || event.date !== events[index - 1].date || event.summary !== events[index - 1].summary,
   );
+}
+
+export function parseTrainingDates(ics: string, today: string, limit = 3): ActivityChoice[] {
+  const dates: string[] = [];
+
+  for (const lines of getEventLines(ics)) {
+    if (unescapeIcalText(getProperty(lines, 'SUMMARY')).trim().toLowerCase() !== 'training') {
+      continue;
+    }
+    if (getProperty(lines, 'STATUS').toUpperCase() === 'CANCELLED') {
+      continue;
+    }
+
+    const start = parseEventDate(getProperty(lines, 'DTSTART'));
+    const recurrence = getProperty(lines, 'RRULE');
+
+    if (!recurrence) {
+      if (start >= today) {
+        dates.push(start);
+      }
+      continue;
+    }
+
+    const rule = Object.fromEntries(recurrence.split(';').map((part) => part.split('=', 2)));
+    if (rule.FREQ !== 'WEEKLY') {
+      continue;
+    }
+
+    const interval = Number.parseInt(rule.INTERVAL ?? '1', 10);
+    const until = rule.UNTIL ? parseEventDate(rule.UNTIL) : null;
+    const excludedDates = new Set(
+      getProperties(lines, 'EXDATE').flatMap((value) => value.split(',')).map(parseEventDate),
+    );
+    const occurrence = parseIsoDate(start);
+
+    while (formatIsoDate(occurrence) < today) {
+      occurrence.setUTCDate(occurrence.getUTCDate() + (7 * interval));
+    }
+
+    for (let count = 0; count < limit; count += 1) {
+      const date = formatIsoDate(occurrence);
+      if (until && date > until) {
+        break;
+      }
+      if (!excludedDates.has(date)) {
+        dates.push(date);
+      }
+      occurrence.setUTCDate(occurrence.getUTCDate() + (7 * interval));
+    }
+  }
+
+  return [...new Set(dates)]
+    .sort((a, b) => a.localeCompare(b))
+    .slice(0, limit)
+    .map((date) => ({ date, value: formatGermanDate(date) }));
 }
 
 function toBase64Url(bytes: Uint8Array): string {
@@ -153,13 +253,13 @@ async function getFormsAccessToken(serviceAccountJson: string): Promise<string> 
   return token.access_token;
 }
 
-async function synchronizeFormChoices(accessToken: string, events: SpieleEvent[]): Promise<void> {
-  if (events.length === 0) {
+async function synchronizeFormChoices(accessToken: string, target: FormTarget, values: string[]): Promise<void> {
+  if (values.length === 0) {
     return;
   }
 
   const headers = { Authorization: `Bearer ${accessToken}` };
-  const formResponse = await fetch(`https://forms.googleapis.com/v1/forms/${SPIELE_FORM_ID}`, { headers });
+  const formResponse = await fetch(`https://forms.googleapis.com/v1/forms/${target.formId}`, { headers });
 
   if (!formResponse.ok) {
     throw new Error(`Google Form request failed: ${formResponse.status}`);
@@ -169,32 +269,30 @@ async function synchronizeFormChoices(accessToken: string, events: SpieleEvent[]
     revisionId: string;
     items?: Array<{
       itemId: string;
-      title: string;
-      questionItem?: { question?: { questionId?: string; required?: boolean; choiceQuestion?: { type?: string; options?: Array<{ value: string }> } } };
+      questionItem?: { question?: { questionId?: string; choiceQuestion?: { type?: string; options?: Array<{ value: string }> } } };
     }>;
   };
-  const item = form.items?.find((candidate) => candidate.itemId === SPIELE_ITEM_ID);
+  const item = form.items?.find((candidate) => candidate.itemId === target.itemId);
   const question = item?.questionItem?.question;
 
   if (!item || !question?.questionId) {
-    throw new Error('Spiele question not found');
+    throw new Error(`${target.title} question not found`);
   }
-  const values = events.map(({ value }) => value);
-  const currentValues = question?.choiceQuestion?.options?.map(({ value }) => value) ?? [];
 
-  if (question?.choiceQuestion?.type === 'DROP_DOWN' && currentValues.join('\n') === values.join('\n')) {
+  const currentValues = question.choiceQuestion?.options?.map(({ value }) => value) ?? [];
+  if (question.choiceQuestion?.type === 'DROP_DOWN' && currentValues.join('\n') === values.join('\n')) {
     return;
   }
 
-  const updateResponse = await fetch(`https://forms.googleapis.com/v1/forms/${SPIELE_FORM_ID}:batchUpdate`, {
+  const updateResponse = await fetch(`https://forms.googleapis.com/v1/forms/${target.formId}:batchUpdate`, {
     method: 'POST',
     headers: { ...headers, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       requests: [{
         updateItem: {
           item: {
-            itemId: SPIELE_ITEM_ID,
-            title: 'Spiele',
+            itemId: target.itemId,
+            title: target.title,
             questionItem: {
               question: {
                 questionId: question.questionId,
@@ -222,26 +320,32 @@ async function synchronizeFormChoices(accessToken: string, events: SpieleEvent[]
 
 export const onRequestGet = async ({ env }: PagesContext): Promise<Response> => {
   if (!env.GOOGLE_SERVICE_ACCOUNT_JSON) {
-    return Response.json({ error: 'Calendar synchronization is not configured' }, { status: 500 });
+    return Response.json({ error: 'Activity synchronization is not configured' }, { status: 500 });
   }
 
   const response = await fetch(CALENDAR_ICS_URL);
-
   if (!response.ok) {
     return Response.json({ error: 'Calendar unavailable' }, { status: 502 });
   }
 
   try {
-    const events = parseSpieleEvents(await response.text(), formatBerlinDate(new Date()));
+    const ics = await response.text();
+    const today = formatBerlinDate(new Date());
+    const spiele = parseSpieleEvents(ics, today);
+    const training = parseTrainingDates(ics, today);
     const accessToken = await getFormsAccessToken(env.GOOGLE_SERVICE_ACCOUNT_JSON);
-    await synchronizeFormChoices(accessToken, events);
+
+    await Promise.all([
+      synchronizeFormChoices(accessToken, SPIELE_FORM, spiele.map(({ value }) => value)),
+      synchronizeFormChoices(accessToken, TRAINING_FORM, training.map(({ value }) => value)),
+    ]);
 
     return Response.json(
-      { events },
+      { spiele, training },
       { headers: { 'Cache-Control': 'public, max-age=300' } },
     );
   } catch (error) {
     console.error(error);
-    return Response.json({ error: 'Calendar synchronization failed' }, { status: 502 });
+    return Response.json({ error: 'Activity synchronization failed' }, { status: 502 });
   }
 };
